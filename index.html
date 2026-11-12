@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#090b1b">
+<title>NEXORA v0.1 — Beyond the Known</title>
+<style>
+:root{--bg:#090b1b;--panel:#11162b;--panel2:#171e38;--line:#303957;--purple:#8b5cff;--cyan:#00e5ff;--white:#f5f7ff;--muted:#9ba8c8;--gold:#ffd36a}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}button{font:inherit;color:inherit;border:1px solid var(--line);background:#1a2340;border-radius:12px;padding:11px 10px;font-weight:700;cursor:pointer;touch-action:manipulation}button:active{transform:scale(.98);filter:brightness(1.2)}button:disabled{opacity:.38;cursor:not-allowed}
+#app{height:100dvh;max-width:900px;margin:auto;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);gap:9px}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 0}
+.brand{font-weight:950;letter-spacing:.18em;font-size:20px;background:linear-gradient(90deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.version{font-size:10px;color:var(--muted);letter-spacing:.13em;margin-top:2px}
+.pill{font-size:10px;color:var(--cyan);border:1px solid #17566a;border-radius:99px;padding:6px 9px;letter-spacing:.08em}
+.resources{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.resource{background:linear-gradient(145deg,#151d37,#10152a);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.resource small{display:block;color:var(--muted);font-size:9px;letter-spacing:.1em}
+.resource strong{font-size:17px;font-variant-numeric:tabular-nums}
+#worldCard{position:relative;flex:1;min-height:250px;background:radial-gradient(ellipse at 50% 45%,#202954 0%,#11172e 50%,#0c1022 100%);border:1px solid #293456;border-radius:18px;overflow:hidden}
+#worldCanvas{width:100%;height:100%;display:block;touch-action:manipulation}
+.worldTop{position:absolute;left:11px;right:11px;top:10px;display:flex;justify-content:space-between;pointer-events:none}
+.worldTag{font-size:9px;letter-spacing:.13em;color:#c5d4ff;background:#0b1026cc;border:1px solid #344064;border-radius:8px;padding:6px 8px}
+#hint{position:absolute;bottom:9px;left:10px;right:10px;text-align:center;color:#b8c5e6;font-size:10px;text-shadow:0 1px 4px #000;pointer-events:none}
+#status{min-height:34px;background:#11172c;border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:#c5d2f0;font-size:11px;line-height:1.35}
+#status b{color:var(--cyan)}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.action{padding:10px 4px;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:58px}
+.action span:first-child{font-size:18px}
+.action.primary{border-color:#6548b3;background:linear-gradient(145deg,#30205a,#172341)}
+.action.cyan{border-color:#17647a;background:linear-gradient(145deg,#12384b,#172341)}
+.bottom{display:flex;gap:7px}
+.bottom button{flex:1;font-size:10px;padding:9px}
+footer{text-align:center;color:#667494;font-size:9px;padding:0 0 3px;letter-spacing:.08em}
+.modal{position:fixed;inset:0;background:#030611c9;display:none;align-items:flex-end;justify-content:center;padding:14px;z-index:5}
+.modal.show{display:flex}
+.sheet{width:min(100%,520px);background:#11182e;border:1px solid #46547b;border-radius:20px;padding:17px;box-shadow:0 20px 70px #000a}
+.sheet h2{margin:0 0 6px;font-size:18px}.sheet p{color:#aebbd9;font-size:12px;line-height:1.5;margin:6px 0 14px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}.choice{text-align:left;min-height:76px}.choice b{display:block;color:var(--cyan);font-size:12px;margin-bottom:5px}.choice small{display:block;color:#aebbd9;font-weight:400;font-size:10px;line-height:1.35}
+.sheet .close{width:100%;margin-top:10px;background:#202943}
+@media(min-width:650px){#app{padding-left:22px;padding-right:22px}.brand{font-size:24px}.resource strong{font-size:20px}.action{font-size:12px;min-height:64px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header><div><div class="brand">NEXORA</div><div class="version">BEYOND THE KNOWN · PROTOTYPE 0.1</div></div><div class="pill">NEXUS PRIME</div></header>
+<section class="resources">
+ <div class="resource"><small>⚡ NEXUS ENERGY</small><strong id="energy">120</strong></div>
+ <div class="resource"><small>◆ CRYSTAL</small><strong id="crystal">80</strong></div>
+ <div class="resource"><small>✦ BIOMASS</small><strong id="biomass">60</strong></div>
+</section>
+<section id="worldCard">
+ <canvas id="worldCanvas" aria-label="Bản đồ chiến thuật NEXORA"></canvas>
+ <div class="worldTop"><span class="worldTag">SECTOR 01 · FRONTIER</span><span class="worldTag" id="turn">TURN 01</span></div>
+ <div id="hint">Chạm vào một ô sáng để chọn khu vực</div>
+</section>
+<div id="status">Nền văn minh vừa thức tỉnh trên <b>NEXUS PRIME</b>. Hãy xây dựng trung tâm chỉ huy.</div>
+<section class="actions">
+ <button class="action primary" id="build"><span>⌂</span><span>BUILD</span></button>
+ <button class="action cyan" id="explore"><span>⌖</span><span>EXPLORE</span></button>
+ <button class="action" id="research"><span>⌬</span><span>RESEARCH</span></button>
+ <button class="action" id="end"><span>◷</span><span>END TURN</span></button>
+</section>
+<div class="bottom">
+ <button id="civil">CIVILIZATION</button><button id="help">HOW TO PLAY</button><button id="reset">NEW WORLD</button>
+</div>
+<footer>EXPLORE · EVOLVE · SHAPE YOUR WORLD</footer>
+</div>
+<div class="modal" id="modal"><div class="sheet"><h2 id="modalTitle">BUILD</h2><p id="modalText"></p><div class="choices" id="choices"></div><button class="close" id="close">CLOSE</button></div></div>
+<script>
+(()=>{
+const canvas=document.getElementById('worldCanvas'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let state, selected=null, tileSize=0, origin={x:0,y:0}, dpr=1;
+const types=['plain','crystal','bio','void','ancient'];
+const colors={plain:'#26375a',crystal:'#27647a',bio:'#28634e',void:'#3c315f',ancient:'#69502f'};
+function newGame(){
+ state={energy:120,crystal:80,biomass:60,turn:1,level:1,tech:0,buildings:0,explored:0,score:0,world:[],won:false};
+ for(let y=0;y<7;y++){let row=[];for(let x=0;x<7;x++){let r=Math.random();let type=r<.12?'crystal':r<.27?'bio':r<.36?'void':r<.43?'ancient':'plain';row.push({type,seen:(x===3&&y===3)||(Math.abs(x-3)+Math.abs(y-3)===1),building:null});}state.world.push(row);}
+ state.world[3][3]={type:'plain',seen:true,building:'command'};
+ selected={x:3,y:3};render();say('Trung tâm chỉ huy đã được thiết lập. Hãy mở rộng vùng ảnh hưởng của bạn.');update();
+}
+function update(){
+ $('energy').textContent=state.energy;$('crystal').textContent=state.crystal;$('biomass').textContent=state.biomass;$('turn').textContent='TURN '+String(state.turn).padStart(2,'0');
+ $('build').disabled=!selected||!state.world[selected.y][selected.x].seen||!!state.world[selected.y][selected.x].building;
+ $('explore').disabled=!selected||state.world[selected.y][selected.x].seen;
+ $('research').disabled=state.crystal<30||state.energy<25;
+}
+function say(s){$('status').innerHTML=s;}
+function resize(){
+ const rect=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(rect.width*dpr);canvas.height=Math.floor(rect.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);render();
+}
+function project(x,y){return {x:origin.x+(x-y)*tileSize*.5,y:origin.y+(x+y)*tileSize*.25};}
+function pathTile(p){ctx.beginPath();ctx.moveTo(p.x,p.y-tileSize*.25);ctx.lineTo(p.x+tileSize*.5,p.y);ctx.lineTo(p.x,p.y+tileSize*.25);ctx.lineTo(p.x-tileSize*.5,p.y);ctx.closePath();}
+function render(){
+ if(!canvas.width)return;
+ const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);
+ tileSize=Math.min((w-30)/7,(h-40)/4.4);origin={x:w/2,y:Math.max(65,(h-7*tileSize*.25)/2+10)};
+ // faint stars
+ for(let i=0;i<45;i++){let x=(i*83%w),y=(i*47%h);ctx.fillStyle='rgba(165,190,255,.22)';ctx.fillRect(x,y,1.3,1.3);}
+ for(let sum=0;sum<=12;sum++)for(let y=0;y<7;y++){let x=sum-y;if(x<0||x>6)continue;let t=state.world[y][x],p=project(x,y);
+  pathTile(p);
+  if(!t.seen){ctx.fillStyle='#10172b';ctx.strokeStyle='#263452';ctx.lineWidth=1;ctx.fill();ctx.stroke();ctx.fillStyle='#4b5877';ctx.font=`${Math.max(8,tileSize*.15)}px sans-serif`;ctx.textAlign='center';ctx.fillText('?',p.x,p.y+3);continue;}
+  ctx.fillStyle=colors[t.type];ctx.strokeStyle=t.type==='crystal'?'#5bdfff':t.type==='bio'?'#62e5a0':t.type==='void'?'#9d83ff':t.type==='ancient'?'#e4bd70':'#526c9b';ctx.lineWidth=1.2;ctx.fill();ctx.stroke();
+  // inner highlight
+  ctx.beginPath();ctx.moveTo(p.x,p.y-tileSize*.19);ctx.lineTo(p.x+tileSize*.37,p.y);ctx.strokeStyle='rgba(255,255,255,.12)';ctx.stroke();
+  if(t.type==='crystal'){ctx.fillStyle='#9af5ff';ctx.font=`${tileSize*.22}px sans-serif`;ctx.fillText('◆',p.x,p.y+tileSize*.07);}
+  if(t.type==='bio'){ctx.fillStyle='#8dffb9';ctx.font=`${tileSize*.22}px sans-serif`;ctx.fillText('✦',p.x,p.y+tileSize*.07);}
+  if(t.type==='void'){ctx.fillStyle='#c4a7ff';ctx.font=`${tileSize*.22}px sans-serif`;ctx.fillText('◉',p.x,p.y+tileSize*.07);}
+  if(t.type==='ancient'){ctx.fillStyle='#ffe09a';ctx.font=`${tileSize*.22}px sans-serif`;ctx.fillText('⌬',p.x,p.y+tileSize*.07);}
+  if(t.building){ctx.fillStyle='#e9f8ff';ctx.font=`bold ${tileSize*.25}px sans-serif`;ctx.fillText(t.building==='command'?'⬡':t.building==='extractor'?'⚡':t.building==='biofarm'?'♣':'⌘',p.x,p.y+tileSize*.1);}
+  if(selected&&selected.x===x&&selected.y===y){pathTile(p);ctx.strokeStyle='#00e5ff';ctx.lineWidth=3;ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();}
+ }
+}
+function pick(px,py){
+ let best=null,dist=1e9;
+ for(let y=0;y<7;y++)for(let x=0;x<7;x++){let p=project(x,y),dx=Math.abs(px-p.x),dy=Math.abs(py-p.y);if(dx<=tileSize*.5&&dy<=tileSize*.25){let d=dx+dy;if(d<dist){best={x,y};dist=d;}}}
+ if(best){selected=best;let t=state.world[best.y][best.x];say(t.seen?`Khu vực: <b>${typeName(t.type)}</b>${t.building?' · Đã có công trình':''}.`:'Vùng đất chưa được khám phá.');render();update();}
+}
+function typeName(t){return {plain:'Đồng nguyên',crystal:'Mạch tinh thể',bio:'Sinh quyển',void:'Vùng hư không',ancient:'Di tích cổ'}[t];}
+canvas.addEventListener('pointerup',e=>{const r=canvas.getBoundingClientRect();pick(e.clientX-r.left,e.clientY-r.top);});
+function show(title,desc,items){$('modalTitle').textContent=title;$('modalText').textContent=desc;$('choices').innerHTML='';items.forEach(item=>{let b=document.createElement('button');b.className='choice';b.innerHTML=`<b>${item.name}</b><small>${item.desc}</small>`;b.disabled=item.disabled||false;b.onclick=()=>{item.run();close();};$('choices').appendChild(b);});$('modal').classList.add('show');}
+function close(){$('modal').classList.remove('show');}
+$('close').onclick=close;$('modal').addEventListener('click',e=>{if(e.target===$('modal'))close();});
+$('build').onclick=()=>{
+ if(!selected)return;let t=state.world[selected.y][selected.x];if(!t.seen||t.building)return;
+ show('CONSTRUCT','Chọn công trình. Mỗi công trình có tác động riêng lên nền văn minh.',[
+ {name:'⚡ ENERGY EXTRACTOR',desc:'Chi phí 35 tinh thể · +18 năng lượng mỗi lượt',disabled:state.crystal<35,run:()=>build('extractor',0,35,0)},
+ {name:'♣ BIO FARM',desc:'Chi phí 25 năng lượng · +14 sinh khối mỗi lượt',disabled:state.energy<25,run:()=>build('biofarm',25,0,0)},
+ {name:'⌘ RESEARCH NODE',desc:'Chi phí 35 năng lượng + 20 tinh thể · tăng điểm nghiên cứu',disabled:state.energy<35||state.crystal<20,run:()=>build('research',35,20,0)}
+ ]);
+};
+function build(kind,e,c,b){let t=state.world[selected.y][selected.x];state.energy-=e;state.crystal-=c;state.biomass-=b;t.building=kind;state.buildings++;state.score+=10;render();update();say('Đã xây dựng công trình. Kết thúc lượt để nhận sản lượng.');}
+$('explore').onclick=()=>{
+ if(!selected)return;let t=state.world[selected.y][selected.x];if(t.seen)return;
+ let adjacent=false;for(let [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){let x=selected.x+dx,y=selected.y+dy;if(x>=0&&x<7&&y>=0&&y<7&&state.world[y][x].seen)adjacent=true;}
+ if(!adjacent){say('Bạn cần khám phá từ một vùng đã được mở.');return;}
+ if(state.energy<15){say('Không đủ năng lượng để thám hiểm. Cần 15 năng lượng.');return;}
+ state.energy-=15;t.seen=true;state.explored++;let reward=t.type==='crystal'?{crystal:24,energy:8}:t.type==='bio'?{biomass:22,energy:5}:t.type==='ancient'?{crystal:15,energy:20,biomass:8}:t.type==='void'?{energy:30}:{energy:12,biomass:5};
+ Object.keys(reward).forEach(k=>state[k]+=reward[k]);state.score+=5;render();update();say(`Đã khám phá <b>${typeName(t.type)}</b>. Thu được tài nguyên mới.`);
+};
+$('research').onclick=()=>{
+ show('RESEARCH LAB','Đầu tư tài nguyên để mở khóa năng lực của nền văn minh.',[
+ {name:'EFFICIENT FLOW',desc:'30 tinh thể + 25 năng lượng · +5 năng lượng mỗi lượt',disabled:state.crystal<30||state.energy<25,run:()=>{state.crystal-=30;state.energy-=25;state.tech++;state.score+=15;say('Nghiên cứu thành công: Efficient Flow.');update();}},
+ {name:'BIOSYNTHESIS',desc:'30 tinh thể + 25 năng lượng · +5 sinh khối mỗi lượt',disabled:state.crystal<30||state.energy<25,run:()=>{state.crystal-=30;state.energy-=25;state.tech+=2;state.score+=15;say('Nghiên cứu thành công: Biosynthesis.');update();}}
+ ]);
+};
+$('end').onclick=()=>{
+ state.turn++;let e=8,c=3,b=2;
+ state.world.flat().forEach(t=>{if(t.building==='extractor')e+=18;if(t.building==='biofarm')b+=14;if(t.building==='research')c+=5;});
+ state.energy+=e+state.tech*5;state.crystal+=c;state.biomass+=b+Math.floor(state.tech/2)*5;
+ // world pulse
+ if(state.turn%4===0){let hidden=[];state.world.forEach((r,y)=>r.forEach((t,x)=>{if(!t.seen)hidden.push({x,y,t});}));if(hidden.length){let q=hidden[Math.floor(Math.random()*hidden.length)];q.t.type=Math.random()<.5?'crystal':'bio';say('Một xung năng lượng vừa làm biến đổi khu vực chưa khám phá.');}}
+ update();render();if(state.score>=100){say('<b>THÀNH TỰU: FRONTIER PIONEER.</b> Bạn đã đặt nền móng cho một nền văn minh mới!');}else say(`Lượt ${state.turn}: nền văn minh sản xuất +${e} năng lượng, +${c} tinh thể và +${b} sinh khối.`);
+};
+$('civil').onclick=()=>show('CIVILIZATION STATUS',`Cấp độ ${state.level} · Điểm phát triển ${state.score} · Công trình ${state.buildings} · Vùng đã khám phá ${state.explored} · Nghiên cứu ${state.tech}`,[
+{name:'CLOSE STATUS',desc:'Tiếp tục điều hành nền văn minh.',run:()=>{}}
+]);
+$('help').onclick=()=>show('HOW TO PLAY','Mục tiêu bản thử nghiệm: phát triển căn cứ, khám phá các ô bản đồ, xây công trình và nghiên cứu. Chạm ô đã mở để chọn. Dùng EXPLORE để mở ô liền kề với vùng đã biết (tốn 15 năng lượng). Dùng BUILD để xây trên ô trống đã khám phá. END TURN để nhận sản lượng.',[
+{name:'START STRATEGY',desc:'Chúc bạn kiến tạo thành công.',run:()=>{}}
+]);
+$('reset').onclick=()=>show('CREATE NEW WORLD','Khởi tạo thế giới mới sẽ xóa tiến trình hiện tại trên thiết bị này.',[
+{name:'CREATE NEW WORLD',desc:'Tạo bản đồ ngẫu nhiên mới.',run:newGame},
+{name:'KEEP CURRENT WORLD',desc:'Quay lại thế giới hiện tại.',run:()=>{}}
+]);
+window.addEventListener('resize',resize);
+newGame();resize();
+})();
+</script>
+</body>
+</html>
